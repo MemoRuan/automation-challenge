@@ -16,14 +16,15 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.asserts.Assertion;
-import runner.TestRunner;
+import org.testng.asserts.SoftAssert;
+
 import java.time.Duration;
 
 
-public class Search_UsingGo{
+public class Search_Steps {
 
     private WebDriver driver;
+    SoftAssert softAssert = new SoftAssert();
 
     @Before
     public void setup(){
@@ -33,11 +34,9 @@ public class Search_UsingGo{
         firefoxOptions.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         driver = new FirefoxDriver(firefoxOptions);
         driver.manage().window().maximize();
-
-        //return;
     }
 
-    //@After
+    @After
     public void tearDown(){
         driver.quit();
     }
@@ -78,12 +77,54 @@ public class Search_UsingGo{
 
     @Then("the repo list is displayed in the results section")
     public void theRepoListIsDisplayedInTheResultsSection() throws InterruptedException {
+        SoftAssert softAssert = new SoftAssert();
         System.out.println("The user is going to see see the results table");
-        WebElement resultsArea = (new WebDriverWait(driver, Duration.ofSeconds(10)).until((ExpectedConditions.presenceOfElementLocated(By.cssSelector("[class=\"repo-amount\"]")))));
+        WebElement resultsArea = (new WebDriverWait(driver, Duration.ofSeconds(5)).until((ExpectedConditions.presenceOfElementLocated(By.cssSelector("[class=\"repo-amount\"]")))));
         String foundRepos = resultsArea.getText();
+        //Assert to check the search retrieves information
         Boolean verifyResults = foundRepos.matches("No repos");
-        Assert.assertFalse(verifyResults);
+        //SoftAssert due to I saw the generic error message, no results were retrieved
+        ///strong[@innertext='Something went wrong']
+        softAssert.assertFalse(verifyResults);
         System.out.println("foundRepos = " + foundRepos);
+    }
+
+    /*** Second Test selected to automate
+     * Search_InfoDisplayed
+     */
+    @And("each row contains a Name column")
+    public void eachRowContainsANameColumn() {
+        System.out.println("A table with results must be displayed");
+        WebElement table = driver.findElement(By.xpath("//section[@class='output-area']//ul//a[@href='https://github.com/MemoRuan/itsexample']"));
+        Boolean verifyColumn = table.isDisplayed();
+        System.out.println("verifyColumn = " + verifyColumn);
+        softAssert.assertTrue(verifyColumn);
+        //System.out.println("verifyColumn + \"\\n table: \" + table = " + verifyColumn + "\n table: " + table);
+        //section[@class='output-area']//ul//a[@href='https://github.com/MemoRuan/itsexample']
+    }
+
+    @And("each row contains a Description colum")
+    public void eachRowContainsADescriptionColum() {
+        System.out.println("The table should display Description Column");
+        WebElement columnDescription = driver.findElement(By.cssSelector("[class=\"repo-description\"]"));
+        String descriptionText = columnDescription.getText();
+        softAssert.assertNotEquals(descriptionText, "-");
+        System.out.println("The Repo with Description displays text like: "+ descriptionText);
 
     }
+
+    @And("the Description column with no value shows a - sign")
+    public void theDescriptionColumnWithNoValueShowsASign() {
+        System.out.println("The empty Descriptions should display a - sign");
+        WebElement columnDescription = driver.findElement(By.xpath("//section[@class='output-area']//ul/li[3]/p[@class='repo-description']"));//.cssSelector("[class=\"repo-description\"]"));
+        String descriptionText = columnDescription.getText();
+
+        boolean signDisplayed = descriptionText.equalsIgnoreCase("-");
+        softAssert.assertEquals(descriptionText, "-");
+        System.out.println("The Repo without Description displays a sign?: "+ signDisplayed + ", like this: " + descriptionText);
+    }
+
+
+    //Generic Error Message
+    ////?/strong[@innertext='Something went wrong']
 }
